@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {summarize} from '../lib/diary.ts';
+const base='http://127.0.0.1:8787/api/diary';
+const uid=()=>crypto.randomUUID();
+async function post(action,data){const r=await fetch(base,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,data})});assert.equal(r.status,200,await r.text());}
+const read=async()=>await (await fetch(base)).json();
+const p={id:uid(),title:'[검증용] <script>window.__pds_xss=1</script>',startDate:'2026-10-01',endDate:'2026-10-31',priority:2,success:'검증 완료',estimatedMinutes:100};
+await post('plan',p);await post('plan',{...p,title:p.title+' 수정'});
+const ts=Array.from({length:5},(_,i)=>({id:uid(),planId:p.id,title:'[검증용] 할 일 '+i,dueDate:i===4?'2026-12-01':'2026-10-01',priority:2,tags:'QA',estimatedMinutes:20}));
+for(const t of ts)await post('task',t);
+await Promise.all([post('status',{id:ts[0].id,done:true}),post('status',{id:ts[0].id,done:true})]);
+const l={id:uid(),taskId:ts[0].id,startAt:'2026-10-15T09:00:00+09:00',endAt:'2026-10-15T09:30:00+09:00',content:'[검증용] 실행',blocker:'<script>window.__pds_xss=1</script>'};
+await Promise.all([post('log',l),post('log',l)]);
+await post('log',{...l,id:uid(),taskId:ts[1].id});await post('log',{...l,id:uid(),taskId:ts[1].id,blocker:''});
+let d=await read();assert.equal(d.completions.filter(c=>c.task_id===ts[0].id).length,1);assert.equal(d.logs.filter(x=>x.id===l.id).length,1);assert.equal(JSON.parse(d.revisions.find(r=>r.plan_id===p.id).snapshot).title,p.title);assert.equal(d.plans.find(x=>x.id===p.id).estimated_minutes,100);
+assert.deepEqual(summarize(d.tasks.filter(t=>t.plan_id===p.id&&!t.deleted),d.logs,'2026-10-15'),{all:5,done:1,late:3,blocked:2,expected:100,actual:90,delta:-10});
+await post('status',{id:ts[0].id,done:false});d=await read();assert.equal(d.completions.filter(c=>c.task_id===ts[0].id).length,0);
+await post('delete',{id:ts[4].id});await post('task',{...ts[1],title:'[검증용] 수정됨'});
+const next={...p,id:uid(),title:'[검증용] 다음 계획'};const review={id:uid(),planId:p.id,content:'[검증용] 회고',improvement:'작게 나눠 실행하기',next};await post('review',review);await post('review',review);d=await read();assert.equal(d.plans.find(x=>x.id===next.id).improvement,review.improvement);assert.equal(d.reviews.filter(x=>x.id===review.id).length,1);
+assert.deepEqual(await read(),d);assert.equal(d.logs.find(x=>x.id===l.id).start_at,'2026-10-15T00:00:00.000Z');
+const invalid=await fetch(base,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'plan',data:{...p,endDate:'2026-02-30'}})});assert.equal(invalid.status,400);
+assert.deepEqual(summarize([],[],'2026-10-15'),{all:0,done:0,late:0,blocked:0,expected:0,actual:0,delta:0});
+console.log('PASS: plan history, task CRUD, duplicate completion/log, undo, aggregates, Seoul/UTC, review transfer, repeated fetch persistence, validation, empty sums. QA data local only.');

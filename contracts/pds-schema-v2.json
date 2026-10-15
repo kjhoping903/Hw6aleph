@@ -1,0 +1,294 @@
+{
+  "version": 2,
+  "database": "Cloudflare D1 (SQLite)",
+  "tables": {
+    "entries": {
+      "columns": [
+        {
+          "name": "id",
+          "definition": "text PRIMARY KEY NOT NULL"
+        },
+        {
+          "name": "date",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "title",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "planned_minutes",
+          "definition": "integer NOT NULL"
+        },
+        {
+          "name": "actual_minutes",
+          "definition": "integer"
+        },
+        {
+          "name": "actual",
+          "definition": "text DEFAULT '' NOT NULL"
+        },
+        {
+          "name": "reflection",
+          "definition": "text DEFAULT '' NOT NULL"
+        },
+        {
+          "name": "next_plan",
+          "definition": "text DEFAULT '' NOT NULL"
+        },
+        {
+          "name": "parent_id",
+          "definition": "text"
+        },
+        {
+          "name": "created_at",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "updated_at",
+          "definition": "text NOT NULL"
+        }
+      ],
+      "foreignKeys": []
+    },
+    "completions": {
+      "columns": [
+        {
+          "name": "task_id",
+          "definition": "text PRIMARY KEY NOT NULL"
+        },
+        {
+          "name": "completed_at",
+          "definition": "text NOT NULL"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "task_id",
+          "references": "tasks.id"
+        }
+      ]
+    },
+    "execution_logs": {
+      "columns": [
+        {
+          "name": "id",
+          "definition": "text PRIMARY KEY NOT NULL"
+        },
+        {
+          "name": "task_id",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "start_at",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "end_at",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "actual_minutes",
+          "definition": "integer NOT NULL"
+        },
+        {
+          "name": "content",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "blocker",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "created_at",
+          "definition": "text NOT NULL"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "task_id",
+          "references": "tasks.id"
+        }
+      ]
+    },
+    "plans": {
+      "columns": [
+        {
+          "name": "id",
+          "definition": "text PRIMARY KEY NOT NULL"
+        },
+        {
+          "name": "title",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "start_date",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "end_date",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "priority",
+          "definition": "integer NOT NULL"
+        },
+        {
+          "name": "success",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "estimated_minutes",
+          "definition": "integer NOT NULL"
+        },
+        {
+          "name": "improvement",
+          "definition": "text DEFAULT '' NOT NULL"
+        },
+        {
+          "name": "parent_id",
+          "definition": "text"
+        },
+        {
+          "name": "created_at",
+          "definition": "text NOT NULL"
+        }
+      ],
+      "foreignKeys": []
+    },
+    "reviews": {
+      "columns": [
+        {
+          "name": "id",
+          "definition": "text PRIMARY KEY NOT NULL"
+        },
+        {
+          "name": "plan_id",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "content",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "improvement",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "next_plan_id",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "created_at",
+          "definition": "text NOT NULL"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "plan_id",
+          "references": "plans.id"
+        },
+        {
+          "column": "next_plan_id",
+          "references": "plans.id"
+        }
+      ]
+    },
+    "plan_revisions": {
+      "columns": [
+        {
+          "name": "id",
+          "definition": "text PRIMARY KEY NOT NULL"
+        },
+        {
+          "name": "plan_id",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "snapshot",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "created_at",
+          "definition": "text NOT NULL"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "plan_id",
+          "references": "plans.id"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        {
+          "name": "id",
+          "definition": "text PRIMARY KEY NOT NULL"
+        },
+        {
+          "name": "plan_id",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "title",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "due_date",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "priority",
+          "definition": "integer NOT NULL"
+        },
+        {
+          "name": "tags",
+          "definition": "text NOT NULL"
+        },
+        {
+          "name": "estimated_minutes",
+          "definition": "integer NOT NULL"
+        },
+        {
+          "name": "done",
+          "definition": "integer DEFAULT 0 NOT NULL"
+        },
+        {
+          "name": "deleted",
+          "definition": "integer DEFAULT 0 NOT NULL"
+        },
+        {
+          "name": "created_at",
+          "definition": "text NOT NULL"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "column": "plan_id",
+          "references": "plans.id"
+        }
+      ]
+    }
+  },
+  "rules": {
+    "date": "YYYY-MM-DD; Asia/Seoul calendar dates",
+    "timestamp": "UTC ISO 8601; display Asia/Seoul",
+    "unit": "integer minutes",
+    "actualMinutes": "round((endAt-startAt)/60000); positive",
+    "period": "inclusive task due_date range, selected plan, deleted=0",
+    "planned": "count eligible tasks",
+    "completed": "count eligible tasks where done=1",
+    "late": "count eligible tasks where done=0 and due_date < Seoul today",
+    "blocked": "count distinct eligible task IDs with a nonblank blocker",
+    "expected": "sum eligible task estimated_minutes",
+    "actual": "sum execution_logs.actual_minutes for eligible tasks",
+    "delta": "actual-expected; empty sums = 0",
+    "planRevisions": "snapshot of pre-update plan, appended atomically with plan update",
+    "completion": "task_id primary key; INSERT OR IGNORE; undo deletes completion row",
+    "logIdempotency": "execution_logs.id primary key; retry retains UUID",
+    "review": "next plan and review inserted atomically; improvement copied verbatim",
+    "deletion": "soft delete tasks; retained in JSON export; excluded from aggregates",
+    "legacy": "entries retained in export for compatibility; not included in v2 aggregates"
+  }
+}
